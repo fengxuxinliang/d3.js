@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  body {
+    font: 10px sans-serif;
+  }
+
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
+  .x.axis path {
+    display: none;
+  }
+
+  .line {
+    fill: none;
+    stroke:black;
+    stroke-width: 2.5px;
+  }
+</style>
+
+<body>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script>
+    var margin = {
+        top: 20,
+        right: 20,
+        bottom: 30,
+        left: 50
+      },
+      width = 960 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+
+    var formatDate = d3.time.format("%Y-%m");
+
+    var x = d3.time.scale()
+      .range([0, width]);
+
+    var y = d3.scale.linear()
+      .range([height, 0]);
+
+    var color = d3.scale.category10();
+
+    var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left");
+    
+	var nest = d3.nest()//分层地分组数组元素
+    .key(function(d) { return d.group; });
+	
+    var line = d3.svg.line()
+      .x(function(d) {
+        return x(d.date);
+      })
+      .y(function(d) {
+        return y(d.population);
+      });
+
+    var svg = d3.select("body").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    d3.csv("data.csv", type, function(error, data) {
+      if (error) throw error;
+
+      var dataByGroup = nest.entries(data);//为指定的array(data)参数应用nest操作符，返回一个键值对数组
+      x.domain(d3.extent(data, function(d) {
+        return d.date;
+      }));
+      y.domain(d3.extent(data, function(d) {
+        return d.population;
+      }));
+      svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+      svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Price ($)");
+
+      var provinces = data.map(function(d) {
+        return d.province;
+      })
+   
+      for (var i in provinces) {
+        var p = provinces[i];
+        var da = data.filter(function(d) {
+          return d.province === p;
+        });
+        svg.append("path")
+          .datum(da)
+          .attr("class", "line")
+          .attr("d", function(d) { return line(d); })
+		  .style("stroke",function(d){  return color(d[0].province);});
+      }
+    });
+
+    function type(d) {
+
+      d.date = formatDate.parse(d.date);
+      d.population = +d.population;
+      return d;
+    }
+  </script>
+
+
+
+
+data.csv
+
+province,date,population
+1,2013-05,2704
+1,2013-06,4499
+1,2013-07,2159
+1,2013-08,3853
+1,2013-09,1410
+1,2013-10,8819
+1,2013-11,6124
+1,2013-12,8819
+1,2014-01,6124
+2,2013-05,3704
+2,2013-06,5499
+2,2013-07,3159
+2,2013-08,4853
+2,2013-09,2410
+2,2013-10,9819
+2,2013-11,7124
+2,2013-12,9819
+2,2014-01,7124
+3,2013-05,6704
+3,2013-06,3499
+3,2013-07,4159
+3,2013-08,3853
+3,2013-09,3410
+3,2013-10,6819
+3,2013-11,7124
+3,2013-12,5819
+3,2014-01,3124
